@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/com.example.cameraframeworktest"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <com.example.cameraframeworktest.TakenPictureGridView
+        android:id="@+id/gridViewTakenPictures"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/camera_bar_left"
+        android:numColumns="1" />
+
+    <ImageButton
+        android:id="@+id/buttonShutter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonNext"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/gridViewTakenPictures"
+        android:background="@drawable/camera_bar_shutter"
+        android:src="@drawable/camera_shutter" />
+
+    <ImageButton
+        android:id="@+id/buttonNext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/camera_bar_right"
+        android:paddingBottom="3dp"
+        android:src="@drawable/camera_icon_next" />
+
+</RelativeLayout>

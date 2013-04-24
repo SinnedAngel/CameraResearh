@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="TakenPicture">
+        <attr name="orientation" format="integer" />
+        <attr name="cellSize" format="dimension" />
+    </declare-styleable>
+
+    <item name="horizontal" type="integer">0</item>
+    <item name="vertical" type="integer">1</item>
+
+</resources>

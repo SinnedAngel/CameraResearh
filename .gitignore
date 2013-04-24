@@ -1,0 +1,28 @@
+# Android
+*.apk
+*.ap_
+*.dex
+*.class
+bin/*
+gen/*
+local.properties
+# Eclipse
+.project
+.metadata
+tmp/**
+tmp/**/*
+*.tmp
+*.bak
+*.swp
+*~.nib
+.classpath
+.settings/
+.loadpath
+.externalToolBuilders/
+*.launch
+.cproject
+.buildpath
+.idea
+project.properties
+*.iml
+.DS_Store
