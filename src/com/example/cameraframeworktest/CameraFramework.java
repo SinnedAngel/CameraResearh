@@ -19,7 +19,7 @@ public class CameraFramework extends FragmentActivity
 
 	private TakenPictureAdapter mAdapter;
 
-	private OrientedListView2 mPager;
+	private OrientedListView mPager;
 
 	private int mCellSize = 0;
 	private AbsListView.LayoutParams mCellParams;
@@ -30,7 +30,7 @@ public class CameraFramework extends FragmentActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera_framework);
 
-		mPager = (OrientedListView2) findViewById(R.id.takenPicturePager);
+		mPager = (OrientedListView) findViewById(R.id.takenPicturePager);
 
 		for (int i = 0; i < 50; i++)
 		{
@@ -41,6 +41,7 @@ public class CameraFramework extends FragmentActivity
 		mAdapter = new TakenPictureAdapter(this, R.layout.taken_picture_item, mItemList);
 
 		mPager.setAdapter(mAdapter);
+		mPager.setDynamics(new SimpleDynamics(0.9f, 0.6f));
 	}
 
 	@Override
