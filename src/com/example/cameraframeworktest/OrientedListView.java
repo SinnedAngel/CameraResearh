@@ -19,6 +19,8 @@ public class OrientedListView extends AdapterView<ListAdapter>
 {
 	private static final int LAYOUT_MODE_BELOW = 0;
 	private static final int LAYOUT_MODE_ABOVE = 1;
+	private static final int LAYOUT_MODE_RIGHT = 2;
+	private static final int LAYOUT_MODE_LEFT = 3;
 
 	private static final int TOUCH_STATE_RESTING = 0;
 	private static final int TOUCH_STATE_CLICK = 1;
@@ -47,10 +49,14 @@ public class OrientedListView extends AdapterView<ListAdapter>
 
 	public int mListTopStart = 0;
 	public int mListTop = 0;
+	private int mListTopOffset = 0;
+
+	public int mListLeftStart = 0;
+	public int mListLeft = 0;
+	public int mListLeftOffset = 0;
 
 	private int mFirstItemPosition = -1;
 	private int mLastItemPosition = -1;
-	private int mListTopOffset = 0;
 
 	private int mCellSize = 0;
 
@@ -96,7 +102,7 @@ public class OrientedListView extends AdapterView<ListAdapter>
 			if (a != null)
 			{
 				mCellSize = a.getDimensionPixelSize(R.styleable.OrientedListView_cellSize, 0);
-				mOrientation = a.getInt(R.styleable.OrientedListView_orientation, HORIZONTAL);
+				mOrientation = a.getInt(R.styleable.OrientedListView_orientation, VERTICAL);
 				a.recycle();
 			}
 		}
@@ -127,7 +133,6 @@ public class OrientedListView extends AdapterView<ListAdapter>
 	public void setSelection(int position)
 	{
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -138,8 +143,13 @@ public class OrientedListView extends AdapterView<ListAdapter>
 			if (mLayoutParams == null)
 				mLayoutParams = getLayoutParams();
 
-			if (mLayoutParams != null && mLayoutParams.width == LayoutParams.WRAP_CONTENT)
-				getLayoutParams().width = mCellSize;
+			if (mOrientation == VERTICAL)
+			{
+				if (mLayoutParams != null && mLayoutParams.width == LayoutParams.WRAP_CONTENT)
+					mLayoutParams.width = mCellSize;
+			}
+			else if (mLayoutParams != null && mLayoutParams.height == LayoutParams.WRAP_CONTENT)
+				mLayoutParams.height = mCellSize;
 		}
 
 		super.onLayout(changed, left, top, right, bottom);
@@ -150,11 +160,19 @@ public class OrientedListView extends AdapterView<ListAdapter>
 		if (getChildCount() == 0)
 		{
 			mLastItemPosition = -1;
-			fillListDown(mListTop, 0);
+			if (mOrientation == VERTICAL)
+				fillListDown(mListTop, 0);
+			else
+				fillListRight(mListLeft, 0);
 		}
 		else
 		{
-			int offset = mListTop + mListTopOffset - getChildAt(0).getTop();
+			int offset = 0;
+			if (mOrientation == VERTICAL)
+				offset = mListTop + mListTopOffset - getChildAt(0).getTop();
+			else
+				offset = mListLeft + mListLeftOffset - getChildAt(0).getLeft();
+
 			removeNonVisibleViews(offset);
 			fillList(offset);
 		}
@@ -169,13 +187,21 @@ public class OrientedListView extends AdapterView<ListAdapter>
 		if (params == null)
 			params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 
-		final int index = layoutMode == LAYOUT_MODE_ABOVE ? 0 : -1;
+		final int index = (layoutMode == LAYOUT_MODE_ABOVE) || (layoutMode == LAYOUT_MODE_LEFT) ? 0 : -1;
 		addViewInLayout(child, index, params, true);
 
 		if (mCellSize == 0)
 		{
-			int itemWidth = getWidth();
-			child.measure(MeasureSpec.EXACTLY | itemWidth, MeasureSpec.UNSPECIFIED);
+			if (mOrientation == VERTICAL)
+			{
+				int itemWidth = getWidth();
+				child.measure(MeasureSpec.EXACTLY | itemWidth, MeasureSpec.UNSPECIFIED);
+			}
+			else
+			{
+				int itemHeight = getHeight();
+				child.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.EXACTLY | itemHeight);
+			}
 		}
 		else
 			child.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED);
@@ -183,21 +209,39 @@ public class OrientedListView extends AdapterView<ListAdapter>
 
 	private void positionItems()
 	{
-		int top = mListTop + mListTopOffset;
-		int childCount = getChildCount();
-
-		int thisWidth = getWidth();
-
-		for (int index = 0; index < childCount; index++)
+		if (mOrientation == VERTICAL)
 		{
-			View child = getChildAt(index);
+			int top = mListTop + mListTopOffset;
+			int childCount = getChildCount();
+			int thisWidth = getWidth();
+			for (int index = 0; index < childCount; index++)
+			{
+				View child = getChildAt(index);
 
-			int width = child.getMeasuredWidth();
-			int height = child.getMeasuredHeight();
-			int left = (thisWidth - width) / 2;
+				int width = child.getMeasuredWidth();
+				int height = child.getMeasuredHeight();
+				int left = (thisWidth - width) / 2;
 
-			child.layout(left, top, left + width, top + height);
-			top += height + ITEMS_SPACE;
+				child.layout(left, top, left + width, top + height);
+				top += height + ITEMS_SPACE;
+			}
+		}
+		else
+		{
+			int left = mListLeft + mListLeftOffset;
+			int childCount = getChildCount();
+			int thisHeight = getHeight();
+			for (int index = 0; index < childCount; index++)
+			{
+				View child = getChildAt(index);
+
+				int width = child.getMeasuredWidth();
+				int height = child.getMeasuredHeight();
+				int top = (thisHeight - height) / 2;
+
+				child.layout(left, top, left + width, top + height);
+				left += width + ITEMS_SPACE;
+			}
 		}
 	}
 
@@ -219,7 +263,11 @@ public class OrientedListView extends AdapterView<ListAdapter>
 				if (mTouchState == TOUCH_STATE_SCROLL)
 				{
 					mVelocityTracker.addMovement(event);
-					scrollList((int) event.getY() - mTouchStartY);
+
+					if (mOrientation == VERTICAL)
+						scrollList((int) event.getY() - mTouchStartY);
+					else
+						scrollList((int) event.getX() - mTouchStartX);
 				}
 				break;
 
@@ -231,7 +279,11 @@ public class OrientedListView extends AdapterView<ListAdapter>
 				{
 					mVelocityTracker.addMovement(event);
 					mVelocityTracker.computeCurrentVelocity(PIXEL_PER_SECOND);
-					velocity = mVelocityTracker.getYVelocity();
+
+					if (mOrientation == VERTICAL)
+						velocity = mVelocityTracker.getYVelocity();
+					else
+						velocity = mVelocityTracker.getXVelocity();
 				}
 				endTouch(velocity);
 				break;
@@ -289,13 +341,49 @@ public class OrientedListView extends AdapterView<ListAdapter>
 		}
 	}
 
+	private void fillListRight(int rightEdge, final int offset)
+	{
+		int width = getWidth();
+		int count = mAdapter.getCount();
+		while (rightEdge + offset < width && mLastItemPosition < count - 1)
+		{
+			mLastItemPosition++;
+			final View newChild = mAdapter.getView(mLastItemPosition, getCachedView(), this);
+			addAndMeasureChild(newChild, LAYOUT_MODE_RIGHT);
+			rightEdge += newChild.getMeasuredWidth();
+		}
+	}
+
+	private void fillListLeft(int leftEdge, final int offset)
+	{
+		while (leftEdge + offset > 0 && mFirstItemPosition > 0)
+		{
+			mFirstItemPosition--;
+			final View newChild = mAdapter.getView(mFirstItemPosition, getCachedView(), this);
+			addAndMeasureChild(newChild, LAYOUT_MODE_LEFT);
+			final int childWidth = newChild.getMeasuredWidth();
+			leftEdge -= childWidth;
+
+			mListLeftOffset -= childWidth;
+		}
+	}
+
 	private void fillList(final int offset)
 	{
-		final int bottomEdge = getChildAt(getChildCount() - 1).getBottom();
-		fillListDown(bottomEdge, offset);
-
-		final int topEdge = getChildAt(0).getTop();
-		fillListUp(topEdge, offset);
+		if (mOrientation == VERTICAL)
+		{
+			final int bottomEdge = getChildAt(getChildCount() - 1).getBottom();
+			fillListDown(bottomEdge, offset);
+			final int topEdge = getChildAt(0).getTop();
+			fillListUp(topEdge, offset);
+		}
+		else
+		{
+			final int rightEdge = getChildAt(getChildCount() - 1).getRight();
+			fillListRight(rightEdge, offset);
+			final int leftEdge = getChildAt(0).getLeft();
+			fillListLeft(leftEdge, offset);
+		}
 	}
 
 	private View getCachedView()
@@ -313,37 +401,77 @@ public class OrientedListView extends AdapterView<ListAdapter>
 		if (mLastItemPosition != mAdapter.getCount() - 1 && childCount > 1)
 		{
 			View firstChild = getChildAt(0);
-			while (firstChild != null && firstChild.getBottom() + offset < 0)
+			if (mOrientation == VERTICAL)
 			{
-				removeViewInLayout(firstChild);
-				childCount--;
-				mCachedItemViews.addLast(firstChild);
-				mFirstItemPosition++;
+				while (firstChild != null && firstChild.getBottom() + offset < 0)
+				{
+					removeViewInLayout(firstChild);
+					childCount--;
+					mCachedItemViews.addLast(firstChild);
+					mFirstItemPosition++;
 
-				mListTopOffset += firstChild.getMeasuredHeight();
+					mListTopOffset += firstChild.getMeasuredHeight();
 
-				if (childCount > 1)
-					firstChild = getChildAt(0);
-				else
-					firstChild = null;
+					if (childCount > 1)
+						firstChild = getChildAt(0);
+					else
+						firstChild = null;
+				}
+			}
+			else
+			{
+				while (firstChild != null && firstChild.getRight() + offset < 0)
+				{
+					removeViewInLayout(firstChild);
+					childCount--;
+					mCachedItemViews.addLast(firstChild);
+					mFirstItemPosition++;
+
+					mListLeftOffset += firstChild.getMeasuredWidth();
+
+					if (childCount > 1)
+						firstChild = getChildAt(0);
+					else
+						firstChild = null;
+				}
 			}
 		}
 
 		if (mFirstItemPosition != 0 && childCount > 1)
 		{
 			View lastChild = getChildAt(childCount - 1);
-			int height = getHeight();
-			while (lastChild != null && lastChild.getTop() + offset > height)
-			{
-				removeViewInLayout(lastChild);
-				childCount--;
-				mCachedItemViews.addLast(lastChild);
-				mLastItemPosition--;
 
-				if (childCount > 1)
-					lastChild = getChildAt(childCount - 1);
-				else
-					lastChild = null;
+			if (mOrientation == VERTICAL)
+			{
+				int height = getHeight();
+				while (lastChild != null && lastChild.getTop() + offset > height)
+				{
+					removeViewInLayout(lastChild);
+					childCount--;
+					mCachedItemViews.addLast(lastChild);
+					mLastItemPosition--;
+
+					if (childCount > 1)
+						lastChild = getChildAt(childCount - 1);
+					else
+						lastChild = null;
+				}
+			}
+			else
+			{
+				int width = getWidth();
+				while (lastChild != null && lastChild.getLeft() + offset > width)
+				{
+					removeViewInLayout(lastChild);
+					childCount--;
+					mCachedItemViews.addLast(lastChild);
+					mLastItemPosition--;
+
+					if (childCount > 1)
+						lastChild = getChildAt(childCount - 1);
+					else
+						lastChild = null;
+				}
 			}
 		}
 	}
@@ -386,7 +514,11 @@ public class OrientedListView extends AdapterView<ListAdapter>
 
 		mTouchStartX = (int) event.getX();
 		mTouchStartY = (int) event.getY();
-		mListTopStart = getChildAt(0).getTop() - mListTopOffset;
+
+		if (mOrientation == VERTICAL)
+			mListTopStart = getChildAt(0).getTop() - mListTopOffset;
+		else
+			mListLeftStart = getChildAt(0).getLeft() - mListLeftOffset;
 
 		startLongPressCheck();
 
@@ -416,10 +548,22 @@ public class OrientedListView extends AdapterView<ListAdapter>
 					if (mDynamics == null)
 						return;
 
-					mListTopStart = getChildAt(0).getTop() - mListTopOffset;
+					int listPosStart = 0;
+
+					if (mOrientation == VERTICAL)
+					{
+						mListTopStart = getChildAt(0).getTop() - mListTopOffset;
+						listPosStart = mListTopStart;
+					}
+					else
+					{
+						mListLeftStart = getChildAt(0).getLeft() - mListLeftOffset;
+						listPosStart = mListLeftStart;
+					}
+
 					mDynamics.update(AnimationUtils.currentAnimationTimeMillis());
 
-					scrollList((int) mDynamics.getPosition() - mListTopStart);
+					scrollList((int) mDynamics.getPosition() - listPosStart);
 
 					if (!mDynamics.isAtRest(VELOCITY_TOLERANCE, POSITION_TOLERANCE))
 						postDelayed(this, 16);
@@ -429,7 +573,11 @@ public class OrientedListView extends AdapterView<ListAdapter>
 
 		if (mDynamics != null)
 		{
-			mDynamics.setState(mListTop, velocity, AnimationUtils.currentAnimationTimeMillis());
+			if (mOrientation == VERTICAL)
+				mDynamics.setState(mListTop, velocity, AnimationUtils.currentAnimationTimeMillis());
+			else
+				mDynamics.setState(mListLeft, velocity, AnimationUtils.currentAnimationTimeMillis());
+
 			post(mDynamicsRunnable);
 		}
 
@@ -452,18 +600,34 @@ public class OrientedListView extends AdapterView<ListAdapter>
 
 	private void scrollList(final int scrolledDistance)
 	{
-		mListTop = mListTopStart + scrolledDistance;
+		if (mOrientation == VERTICAL)
+			mListTop = mListTopStart + scrolledDistance;
+		else
+			mListLeft = mListLeftStart + scrolledDistance;
+
 		setSnapPoint();
 		requestLayout();
 	}
 
 	private void setSnapPoint()
 	{
-		if (mLastSnapPos == Integer.MIN_VALUE && mLastItemPosition == mAdapter.getCount() - 1
-				&& getChildAt(getChildCount() - 1).getBottom() + ITEMS_SPACE < getHeight())
+		if (mOrientation == VERTICAL)
 		{
-			mLastSnapPos = mListTop;
-			mDynamics.setMinPosition(mLastSnapPos);
+			if (mLastSnapPos == Integer.MIN_VALUE && mLastItemPosition == mAdapter.getCount() - 1
+					&& getChildAt(getChildCount() - 1).getBottom() + ITEMS_SPACE < getHeight())
+			{
+				mLastSnapPos = mListTop;
+				mDynamics.setMinPosition(mLastSnapPos);
+			}
+		}
+		else
+		{
+			if (mLastSnapPos == Integer.MIN_VALUE && mLastItemPosition == mAdapter.getCount() - 1
+					&& getChildAt(getChildCount() - 1).getRight() + ITEMS_SPACE < getWidth())
+			{
+				mLastSnapPos = mListLeft;
+				mDynamics.setMinPosition(mLastSnapPos);
+			}
 		}
 	}
 

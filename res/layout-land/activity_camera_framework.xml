@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <com.example.cameraframeworktest.TakenPictureGridView
-        android:id="@+id/gridViewTakenPictures"
+    <com.example.cameraframeworktest.OrientedListView
+        android:id="@+id/takenPicturePager"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:background="@drawable/camera_bar_left"
-        android:numColumns="1" />
+        android:background="@android:color/black"
+        app:cellSize="48dp"
+        app:orientation="@integer/vertical" />
 
     <ImageButton
         android:id="@+id/buttonShutter"

@@ -8,15 +8,17 @@
         android:id="@+id/takenPicturePager"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@+id/buttonShutter"
         android:background="@android:color/black"
-        app:cellSize="48dp" />
+        app:cellSize="48dp"
+        app:orientation="@integer/horizontal" />
 
     <ImageButton
         android:id="@+id/buttonShutter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignTop="@+id/gridViewTakenPictures"
         android:layout_toLeftOf="@+id/buttonNext"
         android:background="@drawable/camera_bar_shutter"
         android:paddingBottom="3dp"
@@ -28,7 +30,6 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_alignTop="@+id/gridViewTakenPictures"
         android:background="@drawable/camera_bar_right"
         android:paddingBottom="3dp"
         android:src="@drawable/camera_icon_next" />
